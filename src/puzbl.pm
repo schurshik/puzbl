@@ -212,16 +212,17 @@ sub create_submenu_file
     my $submenu = Gtk2::Menu->new();
     $submenu->append(Gtk2::SeparatorMenuItem->new());
     my $create_imagemenuitem_func = sub { my ($name, $image, $action) = (@_);
-				 ref($action) eq 'CODE' or die "Error: the last argument must be a function $!";
-				 my $elem = Gtk2::ImageMenuItem->new($name);
-				 $elem->set_image(Gtk2::Image->new_from_stock($image, 'button'));
-				 $elem->signal_connect('activate' => $action);
-				 $submenu->append($elem); };
+					  ref($action) eq 'CODE' or die "Error: the last argument must be a function $!";
+					  my $elem = Gtk2::ImageMenuItem->new($name);
+					  $elem->set_image(Gtk2::Image->new_from_stock($image, 'button'));
+					  $elem->signal_connect('activate' => $action);
+					  $submenu->append($elem); };
     &$create_imagemenuitem_func("Back uri", 'gtk-go-back', sub { $self->back_uri(); });
     &$create_imagemenuitem_func("Forward uri", 'gtk-go-forward', sub { $self->forward_uri(); });
     &$create_imagemenuitem_func("Add tab", 'gtk-add', sub { $self->add_tab(); });
     &$create_imagemenuitem_func("Close tab", 'gtk-remove', sub { $self->del_tab(); });
     &$create_imagemenuitem_func("Reload page", 'gtk-refresh', sub { $self->reload_uri(); });
+    &$create_imagemenuitem_func("Stop loading", 'gtk-stop', sub { $self->stop_loading(); });
     &$create_imagemenuitem_func("Quit", 'gtk-quit', sub { $self->exit(); });
     $submenu->append(Gtk2::SeparatorMenuItem->new());
     return $submenu;
@@ -242,7 +243,7 @@ sub create_submenu_settings
 				     return $menuitem; };
     $self->{MENUSAVTABS} = &$create_menuitem_func("Save tabs", TRUE, sub { ; });
     $self->{MENUSTBAR} = &$create_menuitem_func("Status bar", TRUE, sub { if (${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->{ENABLESTATUSBAR} != $self->{MENUSTBAR}->get_active()) {
-	                                                                      ${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->statusbar(); } });
+	${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->statusbar(); } });
     $submenu->append(Gtk2::SeparatorMenuItem->new());
     return $submenu;
 }
@@ -321,7 +322,7 @@ sub create_menubar
     $label->set_markup("<span foreground=\"red\" size=\"x-large\"><tt><b>PUZBL</b></tt></span>");
     $hbox_label->pack_start($label, TRUE, TRUE, 0);
     my $event_box = new Gtk2::EventBox;
-    $event_box->signal_connect('button-press-event' => sub { $self->new_uri("https://www.github.com"); });
+    $event_box->signal_connect('button-press-event' => sub { $self->new_uri("https://github.com/schurshik/puzbl"); });
     $event_box->add($hbox_label);
     $hbox->pack_start($event_box, TRUE, TRUE, 0);
     my $frame = Gtk2::Frame->new();
@@ -350,6 +351,7 @@ sub create_buttons
 	&$create_button_func('gtk-add', sub { $self->add_tab(); });
 	&$create_button_func('gtk-remove', sub { $self->del_tab(); });
 	&$create_button_func('gtk-refresh', sub { $self->reload_uri(); });
+	&$create_button_func('gtk-stop', sub { $self->stop_loading(); });
 	&$create_button_func('gtk-quit', sub { $self->exit(); });
 	$hbox->pack_start($hbox_buttons, FALSE, FALSE, 0);
     }
@@ -386,6 +388,13 @@ sub reload_uri
     my ($self, $index) = @_;
     $index = $self->{PUZBLTABIND} unless (defined $index);
     ${$self->{PUZBLTABS}}[$index]->reload();
+}
+
+# stop loading the page
+sub stop_loading
+{
+    my $self = shift;
+    ${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->stop();
 }
 
 # change url
@@ -673,7 +682,7 @@ sub clean_tabs
     $self->del_tabs();
     $self->add_tab();
 }
-    
+
 
 # insert new puzbl object to the array with indicated position
 sub ins_puzbltab

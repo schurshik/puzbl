@@ -76,6 +76,12 @@ sub reload
     send($self->{CLIENT}, "reload\n", 0) if ($self->{CLIENT});
 }
 
+sub stop
+{
+    my $self = shift;
+    send($self->{CLIENT}, "stop\n", 0) if ($self->{CLIENT});
+}
+
 sub uri
 {
     my $self = shift;
