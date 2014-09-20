@@ -22,6 +22,7 @@ sub new
                  NAME => sprintf("%d_%d", $$, $counter++),
                  CLIENT => undef,
 		 URL => undef,
+		 FULLNAME => undef,
 		 # enable or disable status bar
 		 ENABLESTATUSBAR => TRUE };
     $self->{EVENTBOX}->set_events('button_press_mask');
@@ -82,6 +83,12 @@ sub stop
     send($self->{CLIENT}, "stop\n", 0) if ($self->{CLIENT});
 }
 
+sub save
+{
+    my ($self, $path) = @_;
+    system("wget --background '$self->{URL}' --output-document='${path}$self->{FULLNAME}.html'") if (defined($self->{FULLNAME}));
+}
+
 sub uri
 {
     my $self = shift;
@@ -122,7 +129,11 @@ sub set_tabname
 {
     my $self = shift;
     my $tabname = shift;
-    $self->{LABEL}->set_text($tabname) if (defined $tabname);
+    if (defined $tabname)
+    {
+	$self->{LABEL}->set_text($tabname);
+	$self->{FULLNAME} = $tabname;
+    }
     my @text = split "", $tabname;
     if (scalar(@text) > TAB_MAXLEN)
     {

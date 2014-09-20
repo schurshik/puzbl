@@ -223,6 +223,7 @@ sub create_submenu_file
     &$create_imagemenuitem_func("Close tab", 'gtk-remove', sub { $self->del_tab(); });
     &$create_imagemenuitem_func("Reload page", 'gtk-refresh', sub { $self->reload_uri(); });
     &$create_imagemenuitem_func("Stop loading", 'gtk-stop', sub { $self->stop_loading(); });
+    &$create_imagemenuitem_func("Save page", 'gtk-save', sub { $self->save_page(); });
     &$create_imagemenuitem_func("Quit", 'gtk-quit', sub { $self->exit(); });
     $submenu->append(Gtk2::SeparatorMenuItem->new());
     return $submenu;
@@ -352,6 +353,7 @@ sub create_buttons
 	&$create_button_func('gtk-remove', sub { $self->del_tab(); });
 	&$create_button_func('gtk-refresh', sub { $self->reload_uri(); });
 	&$create_button_func('gtk-stop', sub { $self->stop_loading(); });
+	&$create_button_func('gtk-save', sub { $self->save_page(); });
 	&$create_button_func('gtk-quit', sub { $self->exit(); });
 	$hbox->pack_start($hbox_buttons, FALSE, FALSE, 0);
     }
@@ -395,6 +397,14 @@ sub stop_loading
 {
     my $self = shift;
     ${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->stop();
+}
+
+# save page
+sub save_page
+{
+    my ($self, $index) = @_;
+    $index = $self->{PUZBLTABIND} unless (defined $index);
+    ${$self->{PUZBLTABS}}[$index]->save(PUZBL_DIR);
 }
 
 # change url
