@@ -13,11 +13,11 @@ use POSIX qw(mkfifo ceil);
 use Fcntl qw(O_RDWR O_EXCL O_CREAT O_RDONLY O_NONBLOCK);
 use Encode qw(is_utf8 decode_utf8);
 use constant DATA_LEN => 1024;
-use constant PUZBL_DIR => $ENV{"HOME"} . ".puzbl/";
-use constant GTKRC_FILE => $ENV{"HOME"} . ".puzbl/gtkrc";
-use constant URLS_FILE => $ENV{"HOME"} . ".puzbl/urls";
-use constant CONFIG_FILE => $ENV{"HOME"} . ".puzbl/config";
-use constant TABS_FILE => $ENV{"HOME"} . ".puzbl/tabs";
+use constant PUZBL_DIR => $ENV{"HOME"} . ($ENV{"HOME"} =~ /\/$/) ? "" : "/" . ".puzbl/";
+use constant GTKRC_FILE => $ENV{"HOME"} . ($ENV{"HOME"} =~ /\/$/) ? "" : "/" . ".puzbl/gtkrc";
+use constant URLS_FILE => $ENV{"HOME"} . ($ENV{"HOME"} =~ /\/$/) ? "" : "/" . ".puzbl/urls";
+use constant CONFIG_FILE => $ENV{"HOME"} . ($ENV{"HOME"} =~ /\/$/) ? "" : "/" . ".puzbl/config";
+use constant TABS_FILE => $ENV{"HOME"} . ($ENV{"HOME"} =~ /\/$/) ? "" : "/" . ".puzbl/tabs";
 
 sub new
 {
@@ -785,7 +785,7 @@ sub destroy_puzbltabs
     {
 	my $file_desc;
 	open $file_desc, ">", TABS_FILE;
-	if ($self->{MENUSAVTABS}->get_active() == TRUE)
+	if (!defined($self->{MENUSAVTABS}) || $self->{MENUSAVTABS}->get_active() == TRUE)
 	{
 	    foreach my $puzbltab (@{$self->{PUZBLTABS}})
 	    {
