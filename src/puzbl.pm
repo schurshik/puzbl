@@ -13,11 +13,11 @@ use POSIX qw(mkfifo ceil);
 use Fcntl qw(O_RDWR O_EXCL O_CREAT O_RDONLY O_NONBLOCK);
 use Encode qw(is_utf8 decode_utf8);
 use constant DATA_LEN => 1024;
-use constant PUZBL_DIR => $ENV{"HOME"} . ($ENV{"HOME"} =~ /\/$/) ? "" : "/" . ".puzbl/";
-use constant GTKRC_FILE => $ENV{"HOME"} . ($ENV{"HOME"} =~ /\/$/) ? "" : "/" . ".puzbl/gtkrc";
-use constant URLS_FILE => $ENV{"HOME"} . ($ENV{"HOME"} =~ /\/$/) ? "" : "/" . ".puzbl/urls";
-use constant CONFIG_FILE => $ENV{"HOME"} . ($ENV{"HOME"} =~ /\/$/) ? "" : "/" . ".puzbl/config";
-use constant TABS_FILE => $ENV{"HOME"} . ($ENV{"HOME"} =~ /\/$/) ? "" : "/" . ".puzbl/tabs";
+use constant PUZBL_DIR => $ENV{"HOME"} . (($ENV{"HOME"} =~ m:/$:) ? "" : "/") . ".puzbl/";
+use constant GTKRC_FILE => $ENV{"HOME"} . (($ENV{"HOME"} =~ m:/$:) ? "" : "/") . ".puzbl/gtkrc";
+use constant URLS_FILE => $ENV{"HOME"} . (($ENV{"HOME"} =~ m:/$:) ? "" : "/") . ".puzbl/urls";
+use constant CONFIG_FILE => $ENV{"HOME"} . (($ENV{"HOME"} =~ m:/$:) ? "" : "/") . ".puzbl/config";
+use constant TABS_FILE => $ENV{"HOME"} . (($ENV{"HOME"} =~ m:/$:) ? "" : "/") . ".puzbl/tabs";
 
 sub new
 {
@@ -53,7 +53,11 @@ sub new
 		 # check menu of `save tabs`
 		 MENUSAVTABS => undef,
 		 # check menu of status bar
-		 MENUSTBAR => undef };
+		 MENUSTBAR => undef,
+		 # check menu of `show buttons`
+		 MENUSHOWBUTT => undef,
+		 # hbox with buttons
+		 HBOXBUTT => undef };
     bless $self, $class;
     return $self;
 }
@@ -234,7 +238,6 @@ sub create_submenu_settings
     my $self = shift;
     my $submenu = Gtk2::Menu->new();
     $submenu->append(Gtk2::SeparatorMenuItem->new());
-
     my $create_menuitem_func = sub { my ($name, $active, $action) = (@_);
 				     ref($action) eq 'CODE' or die "Error: the last argument must be a function $!";
 				     my $menuitem = Gtk2::CheckMenuItem->new($name);
@@ -245,6 +248,7 @@ sub create_submenu_settings
     $self->{MENUSAVTABS} = &$create_menuitem_func("Save tabs", TRUE, sub { ; });
     $self->{MENUSTBAR} = &$create_menuitem_func("Status bar", TRUE, sub { if (${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->{ENABLESTATUSBAR} != $self->{MENUSTBAR}->get_active()) {
 	${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->statusbar(); } });
+    $self->{MENUSHOWBUTT} = &$create_menuitem_func("Show buttons", TRUE, sub { if ($self->{MENUSHOWBUTT}->get_active() == TRUE) { $self->{HBOXBUTT}->show_all(); } else { $self->{HBOXBUTT}->hide_all(); } });
     $submenu->append(Gtk2::SeparatorMenuItem->new());
     return $submenu;
 }
@@ -336,27 +340,24 @@ sub create_buttons
     my $self = shift;
     my $hbox = new Gtk2::HBox(FALSE, 0);
     $hbox->set_spacing(0);
-    my %hash_config = $self->read_config();
-    unless (exists($hash_config{"buttons"}) && $hash_config{"buttons"} == FALSE)
-    {
-	my $hbox_buttons = new Gtk2::HBox(FALSE, 0);
-	$hbox_buttons->set_spacing(0);
-	my $create_button_func = sub { my ($image, $action) = (@_);
-				       ref($action) eq 'CODE' or die "Error: the last argument must be a function $!";
-				       my $button = new Gtk2::Button;
-				       $button->signal_connect('clicked' => $action);
-				       $button->add(Gtk2::Image->new_from_stock($image, 'button'));
-				       $hbox_buttons->pack_start($button, FALSE, FALSE, 0); };
-	&$create_button_func('gtk-go-back', sub { $self->back_uri(); });
-	&$create_button_func('gtk-go-forward', sub { $self->forward_uri(); });
-	&$create_button_func('gtk-add', sub { $self->add_tab(); });
-	&$create_button_func('gtk-remove', sub { $self->del_tab(); });
-	&$create_button_func('gtk-refresh', sub { $self->reload_uri(); });
-	&$create_button_func('gtk-stop', sub { $self->stop_loading(); });
-	&$create_button_func('gtk-save', sub { $self->save_page(); });
-	&$create_button_func('gtk-quit', sub { $self->exit(); });
-	$hbox->pack_start($hbox_buttons, FALSE, FALSE, 0);
-    }
+    my $hbox_buttons = new Gtk2::HBox(FALSE, 0);
+    $hbox_buttons->set_spacing(0);
+    my $create_button_func = sub { my ($image, $action) = (@_);
+				   ref($action) eq 'CODE' or die "Error: the last argument must be a function $!";
+				   my $button = new Gtk2::Button;
+				   $button->signal_connect('clicked' => $action);
+				   $button->add(Gtk2::Image->new_from_stock($image, 'button'));
+				   $hbox_buttons->pack_start($button, FALSE, FALSE, 0); };
+    &$create_button_func('gtk-go-back', sub { $self->back_uri(); });
+    &$create_button_func('gtk-go-forward', sub { $self->forward_uri(); });
+    &$create_button_func('gtk-add', sub { $self->add_tab(); });
+    &$create_button_func('gtk-remove', sub { $self->del_tab(); });
+    &$create_button_func('gtk-refresh', sub { $self->reload_uri(); });
+    &$create_button_func('gtk-stop', sub { $self->stop_loading(); });
+    &$create_button_func('gtk-save', sub { $self->save_page(); });
+    &$create_button_func('gtk-quit', sub { $self->exit(); });
+    $self->{HBOXBUTT} = $hbox_buttons;
+    $hbox->pack_start($hbox_buttons, FALSE, FALSE, 0);
     my $hbox_entry = new Gtk2::HBox(TRUE, 0);
     my $entry = new Gtk2::Entry;
     $entry->signal_connect('activate' => sub { $self->new_uri($entry->get_text()); });
@@ -490,6 +491,8 @@ sub create_window
     $window->set_border_width(5);
     $window->add($self->{VBOX});
     $window->show_all();
+    my %hash_config = $self->read_config();
+    $self->{MENUSHOWBUTT}->set_active((exists($hash_config{"buttons"}) && $hash_config{"buttons"} == FALSE) ? FALSE : TRUE);
     $window->signal_connect('delete-event' => sub { $self->exit; });
     $window->signal_connect('key-press-event', \&key_press, $self);
     $window->signal_connect('key-release-event', \&key_release, $self);
