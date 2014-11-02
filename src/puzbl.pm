@@ -18,6 +18,7 @@ use constant GTKRC_FILE => $ENV{"HOME"} . (($ENV{"HOME"} =~ m:/$:) ? "" : "/") .
 use constant URLS_FILE => $ENV{"HOME"} . (($ENV{"HOME"} =~ m:/$:) ? "" : "/") . ".puzbl/urls";
 use constant CONFIG_FILE => $ENV{"HOME"} . (($ENV{"HOME"} =~ m:/$:) ? "" : "/") . ".puzbl/config";
 use constant TABS_FILE => $ENV{"HOME"} . (($ENV{"HOME"} =~ m:/$:) ? "" : "/") . ".puzbl/tabs";
+use constant HOME_PAGE => "https://google.com";
 
 sub new
 {
@@ -228,6 +229,7 @@ sub create_submenu_file
     &$create_imagemenuitem_func("Reload page", 'gtk-refresh', sub { $self->reload_uri(); });
     &$create_imagemenuitem_func("Stop loading", 'gtk-stop', sub { $self->stop_loading(); });
     &$create_imagemenuitem_func("Save page", 'gtk-save', sub { $self->save_page(); });
+    &$create_imagemenuitem_func("Home page", 'gtk-home', sub { $self->new_uri(HOME_PAGE); });
     &$create_imagemenuitem_func("Quit", 'gtk-quit', sub { $self->exit(); });
     $submenu->append(Gtk2::SeparatorMenuItem->new());
     return $submenu;
@@ -324,7 +326,7 @@ sub create_menubar
     }
     my $hbox_label = new Gtk2::HBox(TRUE, 0);
     my $label = new Gtk2::Label;
-    $label->set_markup("<span foreground=\"red\" size=\"x-large\"><tt><b>PUZBL</b></tt></span>");
+    $label->set_markup("<span foreground=\"red\" size=\"x-large\"><tt><b><u>PUZBL</u></b></tt></span>");
     $hbox_label->pack_start($label, TRUE, TRUE, 0);
     my $event_box = new Gtk2::EventBox;
     $event_box->signal_connect('button-press-event' => sub { $self->new_uri("https://github.com/schurshik/puzbl"); });
@@ -355,6 +357,7 @@ sub create_buttons
     &$create_button_func('gtk-refresh', sub { $self->reload_uri(); });
     &$create_button_func('gtk-stop', sub { $self->stop_loading(); });
     &$create_button_func('gtk-save', sub { $self->save_page(); });
+    &$create_button_func('gtk-home', sub { $self->new_uri(HOME_PAGE); });
     &$create_button_func('gtk-quit', sub { $self->exit(); });
     $self->{HBOXBUTT} = $hbox_buttons;
     $hbox->pack_start($hbox_buttons, FALSE, FALSE, 0);
@@ -792,7 +795,7 @@ sub destroy_puzbltabs
 	{
 	    foreach my $puzbltab (@{$self->{PUZBLTABS}})
 	    {
-		print $file_desc ($puzbltab->{URL} . "\n");
+		print $file_desc ($puzbltab->{URL} . "\n") if (defined $puzbltab->{URL});
 	    }
 	}
 	close $file_desc;
