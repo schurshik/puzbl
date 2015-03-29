@@ -408,7 +408,7 @@ sub save_page
 {
     my ($self, $index) = @_;
     $index = $self->{PUZBLTABIND} unless (defined $index);
-    ${$self->{PUZBLTABS}}[$index]->save(PUZBL_DIR);
+    ${$self->{PUZBLTABS}}[$index]->save();
 }
 
 # change url

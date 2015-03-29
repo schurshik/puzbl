@@ -85,8 +85,15 @@ sub stop
 
 sub save
 {
-    my ($self, $path) = @_;
-    system("wget --background '$self->{URL}' --output-document='${path}$self->{FULLNAME}.html'") if (defined($self->{FULLNAME}));
+    my $self = shift;
+    my $file_chooser =  Gtk2::FileChooserDialog->new ('Save as', undef, 'save', 'gtk-cancel' => 'cancel', 'gtk-ok' => 'ok');
+    $file_chooser->set_current_name(lc($self->{FULLNAME}) . ".html") if (defined $self->{FULLNAME});
+    if ($file_chooser->run() eq 'ok')
+    {
+	my $file_name = $file_chooser->get_filename();
+	system("wget --background '$self->{URL}' --output-document='$file_name' --output-file=/dev/null");
+    }
+    $file_chooser->destroy();
 }
 
 sub uri
