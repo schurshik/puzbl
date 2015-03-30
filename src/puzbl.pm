@@ -55,10 +55,24 @@ sub new
 		 MENUSAVTABS => undef,
 		 # check menu of status bar
 		 MENUSTBAR => undef,
+		 # check menu of `show menu`
+		 MENUSHOWMENU => undef,
+		 # check menu of `show label`
+		 MENUSHOWLABEL => undef,
 		 # check menu of `show buttons`
 		 MENUSHOWBUTT => undef,
+		 # check menu of `show entry`
+		 MENUSHOWENTRY => undef,
+		 # check menu of `show tabs`
+		 MENUSHOWTABS => undef,
+		 # hbox with menu
+		 HBOXMENU => undef,
+		 # hbox with label
+		 HBOXLABEL => undef,
 		 # hbox with buttons
-		 HBOXBUTT => undef };
+		 HBOXBUTT => undef,
+		 # hbox with entry
+		 HBOXENTRY => undef};
     bless $self, $class;
     return $self;
 }
@@ -248,9 +262,27 @@ sub create_submenu_settings
 				     $submenu->append($menuitem);
 				     return $menuitem; };
     $self->{MENUSAVTABS} = &$create_menuitem_func("Save tabs", TRUE, sub { ; });
-    $self->{MENUSTBAR} = &$create_menuitem_func("Status bar", TRUE, sub { if (${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->{ENABLESTATUSBAR} != $self->{MENUSTBAR}->get_active()) {
-	${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->statusbar(); } });
-    $self->{MENUSHOWBUTT} = &$create_menuitem_func("Show buttons", TRUE, sub { if ($self->{MENUSHOWBUTT}->get_active() == TRUE) { $self->{HBOXBUTT}->show_all(); } else { $self->{HBOXBUTT}->hide_all(); } });
+    $self->{MENUSTBAR} = &$create_menuitem_func("Status bar", TRUE, sub {
+	if (${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->{ENABLESTATUSBAR} != $self->{MENUSTBAR}->get_active()) {
+	    ${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->statusbar(); } });
+    $self->{MENUSHOWMENU} = &$create_menuitem_func("Show menu", TRUE, sub {
+	if ($self->{MENUSHOWMENU}->get_active() == TRUE) {
+	    $self->{HBOXMENU}->show_all(); } else {
+		my $dialog = Gtk2::MessageDialog->new ($self->{WINDOW}, ['modal', 'destroy-with-parent'],
+						       'warning', 'ok', 'To restore menu press "Ctrl-m"');
+		$dialog->run();
+		$dialog->destroy();
+		$self->{HBOXMENU}->hide_all(); } });
+    $self->{MENUSHOWLABEL} = &$create_menuitem_func("Show label", TRUE, sub {
+	if ($self->{MENUSHOWLABEL}->get_active() == TRUE) {
+	    $self->{HBOXLABEL}->show_all(); } else { $self->{HBOXLABEL}->hide_all(); } });
+    $self->{MENUSHOWBUTT} = &$create_menuitem_func("Show buttons", TRUE, sub {
+	if ($self->{MENUSHOWBUTT}->get_active() == TRUE) {
+	    $self->{HBOXBUTT}->show_all(); } else { $self->{HBOXBUTT}->hide_all(); } });
+    $self->{MENUSHOWENTRY} = &$create_menuitem_func("Show entry", TRUE, sub {
+	if ($self->{MENUSHOWENTRY}->get_active() == TRUE) {
+	    $self->{HBOXENTRY}->show_all(); } else { $self->{HBOXENTRY}->hide_all(); } });
+    $self->{MENUSHOWTABS} = &$create_menuitem_func("Show tabs", TRUE, sub { $self->{NOTEBOOK}->set_show_tabs($self->{MENUSHOWTABS}->get_active()); });
     $submenu->append(Gtk2::SeparatorMenuItem->new());
     return $submenu;
 }
@@ -322,12 +354,14 @@ sub create_menubar
 	my $hbox_menu_bar = new Gtk2::HBox(FALSE, 0);
 	$hbox_menu_bar->set_spacing(0);
 	$hbox_menu_bar->pack_start($menu_bar, FALSE, FALSE, 0);
+	$self->{HBOXMENU} = $hbox_menu_bar;
 	$hbox->pack_start($hbox_menu_bar, FALSE, FALSE, 0);
     }
     my $hbox_label = new Gtk2::HBox(TRUE, 0);
     my $label = new Gtk2::Label;
     $label->set_markup("<span foreground=\"red\" size=\"x-large\"><tt><b><u>PUZBL</u></b></tt></span>");
     $hbox_label->pack_start($label, TRUE, TRUE, 0);
+    $self->{HBOXLABEL} = $hbox_label;
     my $event_box = new Gtk2::EventBox;
     $event_box->signal_connect('button-press-event' => sub { $self->new_uri("https://github.com/schurshik/puzbl"); });
     $event_box->add($hbox_label);
@@ -362,6 +396,7 @@ sub create_buttons
     $self->{HBOXBUTT} = $hbox_buttons;
     $hbox->pack_start($hbox_buttons, FALSE, FALSE, 0);
     my $hbox_entry = new Gtk2::HBox(TRUE, 0);
+    $self->{HBOXENTRY} = $hbox_entry;
     my $entry = new Gtk2::Entry;
     $entry->signal_connect('activate' => sub { $self->new_uri($entry->get_text()); });
     $hbox_entry->pack_start($entry, TRUE, TRUE, 0);
@@ -535,6 +570,10 @@ sub key_press
 		elsif ($key eq "l")
 		{
 		    $self->entry_select();
+		}
+		elsif ($key eq "m")
+		{
+		    $self->{MENUSHOWMENU}->set_active(TRUE) if ($self->{MENUSHOWMENU}->get_active() == FALSE);
 		}
 	    }
 	    elsif (($event->get_state() & qw(mod1-mask)) && $self->{PRESSALTL} == TRUE)
