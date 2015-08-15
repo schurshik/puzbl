@@ -12,6 +12,8 @@ use constant TAB_MAXLEN => 10;
 sub new
 {
     my $class = shift;
+    my $args = shift;
+    my $encoding = (defined $args && defined $args->{ENCODING}) ? $args->{ENCODING} : undef;
     state $counter = 0;
     my $self = { SOCK => Gtk2::Socket->new(),
                  HBOX => Gtk2::HBox->new(FALSE, 0),
@@ -24,7 +26,8 @@ sub new
 		 URL => undef,
 		 FULLNAME => undef,
 		 # enable or disable status bar
-		 ENABLESTATUSBAR => TRUE };
+		 ENABLESTATUSBAR => TRUE,
+		 ENCODING => $encoding };
     $self->{EVENTBOX}->set_events('button_press_mask');
     $self->{EVENTBOX}->add($self->{LABEL});
     $self->{HBOX}->pack_start($self->{EVENTBOX}, FALSE, FALSE, 0);
@@ -51,7 +54,7 @@ sub run #(SOCKNAME, URL, TITLE)
     if ($pid == 0)
     {
         exec($command);
-	exit 0;
+        exit 0;
     }
     else
     {
@@ -121,6 +124,23 @@ sub get_url
     return (defined $self->{URL}) ? $self->{URL} : "";
 }
 
+sub set_encoding
+{
+    my $self = shift;
+    my $encoding = shift;
+    if ($encoding ne $self->{ENCODING})
+    {
+        send($self->{CLIENT}, "set current_encoding = @(echo '" . $encoding . "')@\n", 0) if ($self->{CLIENT});
+        $self->{ENCODING} = $encoding;
+    }
+}
+
+sub get_encoding
+{
+    my $self = shift;
+    return $self->{ENCODING};
+}
+
 sub exit
 {
     my $self = shift;
@@ -165,6 +185,12 @@ sub set_client
     my $self = shift;
     my $client = shift;
     $self->{CLIENT} = $client if (defined $client);
+}
+
+sub get_client
+{
+    my $self = shift;
+    return $self->{CLIENT};
 }
 
 1; #---

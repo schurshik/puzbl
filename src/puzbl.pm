@@ -19,6 +19,7 @@ use constant URLS_FILE => $ENV{"HOME"} . (($ENV{"HOME"} =~ m:/$:) ? "" : "/") . 
 use constant CONFIG_FILE => $ENV{"HOME"} . (($ENV{"HOME"} =~ m:/$:) ? "" : "/") . ".puzbl/config";
 use constant TABS_FILE => $ENV{"HOME"} . (($ENV{"HOME"} =~ m:/$:) ? "" : "/") . ".puzbl/tabs";
 use constant HOME_PAGE => "https://google.com";
+use constant DEFAULT_ENCODING => "WINDOWS-1251";
 
 sub new
 {
@@ -72,7 +73,7 @@ sub new
 		 # hbox with buttons
 		 HBOXBUTT => undef,
 		 # hbox with entry
-		 HBOXENTRY => undef};
+		 HBOXENTRY => undef };
     bless $self, $class;
     return $self;
 }
@@ -249,6 +250,34 @@ sub create_submenu_file
     return $submenu;
 }
 
+sub create_submenu_view
+{
+    my $self = shift;
+    my $submenu = Gtk2::Menu->new();
+    $submenu->append(Gtk2::SeparatorMenuItem->new());
+    my $elem_menu = Gtk2::MenuItem->new("Encoding");
+    my $menu = Gtk2::Menu->new();
+    $elem_menu->set_submenu($menu);
+    my $toggle_action = sub { my ($radio_menu, $text) = @_;
+                              $radio_menu->get_active() && ${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->set_encoding($text); };
+    my $group = undef;
+    foreach (@{["WINDOWS-1251", "ISO-8859-1", "KOI8-R", "UTF-8"]})
+    {
+	my $elem_submenu = Gtk2::RadioMenuItem->new($group, $_);
+	$elem_submenu->signal_connect('toggled' => \&$toggle_action, $_);
+	$elem_submenu->set_active(($_ eq DEFAULT_ENCODING) ? TRUE : FALSE);
+	$menu->append($elem_submenu);
+	$group = $elem_submenu->get_group() unless (defined $group);
+    }
+    $elem_menu->signal_connect('activate' => sub { my $this = shift;
+                                                   foreach my $child ($this->get_submenu()->get_children()) {
+                                                       if ($child->get_label() eq ${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->get_encoding()) {
+                                                           $child->set_active(TRUE); last; } } });
+    $submenu->append($elem_menu);
+    $submenu->append(Gtk2::SeparatorMenuItem->new());
+    return $submenu;
+}
+
 sub create_submenu_settings
 {
     my $self = shift;
@@ -343,12 +372,15 @@ sub create_menubar
 	my $menu_bar = Gtk2::MenuBar->new();
 	my $menu_item_file = Gtk2::MenuItem->new("File");
 	$menu_item_file->set_submenu($self->create_submenu_file());
+	my $menu_item_view = Gtk2::MenuItem->new("View");
+	$menu_item_view->set_submenu($self->create_submenu_view());
 	my $menu_item_settings = Gtk2::MenuItem->new("Settings");
 	$menu_item_settings->set_submenu($self->create_submenu_settings());
 	$menu_item_settings->signal_connect('activate' => sub { $self->{MENUSTBAR}->set_active(${$self->{PUZBLTABS}}[$self->{PUZBLTABIND}]->{ENABLESTATUSBAR}); });
 	my $menu_item_help = Gtk2::MenuItem->new("Help");
 	$menu_item_help->set_submenu($self->create_submenu_help());
 	$menu_bar->append($menu_item_file);
+	$menu_bar->append($menu_item_view);
 	$menu_bar->append($menu_item_settings);
 	$menu_bar->append($menu_item_help);
 	my $hbox_menu_bar = new Gtk2::HBox(FALSE, 0);
@@ -632,7 +664,7 @@ sub add_tab #(URL, TITLE, SWITCH, NEXT)
     my $title = (defined $args && defined $args->{TITLE}) ? $args->{TITLE} : undef;
     my $switch = (defined $args && defined $args->{SWITCH}) ? $args->{SWITCH} : TRUE;
     my $next = (defined $args && defined $args->{NEXT}) ? $args->{NEXT} : FALSE;
-    my $puzbltab_obj = puzbltab->new();
+    my $puzbltab_obj = puzbltab->new({ENCODING => DEFAULT_ENCODING});
     $puzbltab_obj->{EVENTBOX}->signal_connect('button-press-event', \&button_press, [$self, $puzbltab_obj]);
     my $new_pos = ($next == TRUE) ? $self->{PUZBLTABIND} + 1 : scalar(@{$self->{PUZBLTABS}});
     $self->{NOTEBOOK}->insert_page($puzbltab_obj->{SOCK}, $puzbltab_obj->{HBOX}, $new_pos);
