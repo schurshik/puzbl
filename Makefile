@@ -1,6 +1,6 @@
 # PUZBL
 # Makefile
-# Developer: Branitskiy Alexander <schurshick@yahoo.com>
+# Developer: Branitskiy Alexander <schurshik@yahoo.com>
 
 PROJ = puzbl
 OUT = $(PROJ)

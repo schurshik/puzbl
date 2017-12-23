@@ -2,7 +2,7 @@ package puzbltab;
 
 # PUZBL #---
 # puzbltab.pm #---
-# Developer: Branitskiy Alexander <schurshick@yahoo.com> #---
+# Developer: Branitskiy Alexander <schurshik@yahoo.com> #---
 use Gtk2 '-init';
 use Glib qw /TRUE FALSE/;
 use feature qw /state/;

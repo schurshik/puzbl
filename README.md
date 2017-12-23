@@ -24,4 +24,4 @@ Control via fifo:
 - select the n-th tab: goto <n>;
 - switch between tabs: prev, next, first, last.
 
-Branitskiy Alexander <schurshick at yahoo dot com>
+Branitskiy Alexander <schurshik at yahoo dot com>

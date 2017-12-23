@@ -2,7 +2,7 @@
 
 # PUZBL
 # puzblmain.pl #---
-# Developer: Branitskiy Alexander <schurshick@yahoo.com>
+# Developer: Branitskiy Alexander <schurshik@yahoo.com>
 use puzbl; #---
 use strict;
 use warnings;

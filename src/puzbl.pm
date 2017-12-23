@@ -2,7 +2,7 @@ package puzbl;
 
 # PUZBL #---
 # puzbl.pm #---
-# Developer: Branitskiy Alexander <schurshick@yahoo.com> #---
+# Developer: Branitskiy Alexander <schurshik@yahoo.com> #---
 use puzbltab; #---
 use Gtk2 '-init';
 use Gtk2::Helper;
@@ -346,7 +346,8 @@ sub read_config
 	while (my $line = <$file_desc>)
 	{
 	    next if ($line =~ m/^\s*#+/);
-	    if ($line =~ m/^\s*([^\s]*)\s*=\s*([^\s]*)$/)
+	    chomp $line;
+	    if ($line =~ m/^\s*([^\s]*)\s*=\s*([^\s]*)\s*$/)
 	    {
 		my ($elem, $value) = ($1, $2);
 		if (($elem eq "menu" || $elem eq "buttons") &&
